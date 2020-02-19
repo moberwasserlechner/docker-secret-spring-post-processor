@@ -2,7 +2,39 @@
 
 [![Download](https://img.shields.io/bintray/v/moberwasserlechner/maven/docker-boot-utils.svg)](https://bintray.com/moberwasserlechner/maven/docker-boot-utils/_latestVersion) ![Tests](https://github.com/moberwasserlechner/docker-boot-utils/workflows/Tests/badge.svg) [![Twitter Follow](https://img.shields.io/twitter/follow/michaelowl_web.svg?style=social&label=Follow&style=flat-square)](https://twitter.com/michaelowl_web)
 
-## Usage
+## Docker Secret EnvironmentPostProcessor
+
+Docker secrets are mounted to the container on a file basis. This is a approach not support by Spring out of the box.
+
+The class `DockerSecretEnvPostProcessor` reads these secret files and creates properties usable like any other spring property.
+
+```
+# `docker_secret_` is the prefix and `email_username` the name of the secret file
+app.email.username=${docker_secrets_email_username}
+```
+
+### Setup
+
+To enable this post processor you have to create `src/main/resources/META-INF/spring.factories` containing
+```
+org.springframework.boot.env.EnvironmentPostProcessor=com.byteowls.docker.boot.DockerSecretEnvPostProcessor
+```
+
+### Configure
+
+After that you can configure the post processor from your `application-<env>.properties` or any other Spring supported mechanism.
+
+```
+#key=default_value
+docker.boot.secret.enabled=true
+docker.boot.secret.path=/run/secrets
+docker.boot.secret.prefix=docker_secrets_
+# print to console as logging is not ready yet
+docker.boot.secret.print.errors=true
+docker.boot.secret.print.secrets=false
+```
+
+## Dependency
 
 ### Gradle
 
@@ -39,38 +71,6 @@ dependencies {
   </dependency>
 </dependencies>
     
-```
-
-## Docker Secret EnvironmentPostProcessor
-
-Docker secrets are mounted to the container on a file basis. This is a approach not support by Spring out of the box.
-
-The class `DockerSecretEnvPostProcessor` reads these secret files and creates properties usable like any other spring property.
-
-```
-# `docker_secret_` is the prefix and `email_username` the name of the secret file
-app.email.username=${docker_secrets_email_username}
-```
-
-### Setup
-
-To enable this post processor you have to create `src/main/resources/META-INF/spring.factories` containing
-```
-org.springframework.boot.env.EnvironmentPostProcessor=com.byteowls.docker.boot.DockerSecretEnvPostProcessor
-```
-
-### Configure
-
-After that you can configure the post processor from your `application-<env>.properties` or any other Spring supported mechanism.
-
-```
-#key=default_value
-docker.boot.secret.enabled=true
-docker.boot.secret.path=/run/secrets
-docker.boot.secret.prefix=docker_secrets_
-# print to console as logging is not ready yet
-docker.boot.secret.print.errors=true
-docker.boot.secret.print.secrets=false
 ```
 
 ## Contribute
