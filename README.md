@@ -6,20 +6,41 @@
 
 ### Gradle
 
-Repository
+```
+repositories {
+  jcenter()
+}
+dependencies {
+  compile ("com.byteowls:docker-boot-utils:replace.with.version")
+}
+```
+
+### Maven
 
 ```
-    repositories {
-      jcenter()
-    }
+<repositories>
+  <!-- ... other repository elements ... -->
+  <repository>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+    <id>central</id>
+    <name>bintray</name>
+    <url>http://jcenter.bintray.com</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <!-- ... other dependency elements ... -->
+  <dependency>
+    <groupId>com.byteowls</groupId>
+    <artifactId>docker-boot-utils</artifactId>
+    <version>replace.with.version</version>
+  </dependency>
+</dependencies>
+    
 ```
 
-Dependency
-```
-    dependencies {
-      compile ("com.byteowls:docker-boot-utils:replace.with.version")
-    }
-```
 ## Docker Secret EnvironmentPostProcessor
 
 Docker secrets are mounted to the container on a file basis. This is a approach not support by Spring out of the box.
