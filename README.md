@@ -10,7 +10,7 @@ The class `DockerSecretEnvPostProcessor` reads these secret files and creates pr
 
 ```
 # `docker_secret_` is the prefix and `email_username` the name of the secret file
-app.email.username=${docker_secrets_email_username}
+app.email.username=${docker_secret_email_username}
 ```
 
 ### Setup
@@ -28,7 +28,7 @@ After that you can configure the post processor from your `application-<env>.pro
 #key=default_value
 docker.boot.secret.enabled=true
 docker.boot.secret.path=/run/secrets
-docker.boot.secret.prefix=docker_secrets_
+docker.boot.secret.prefix=docker_secret_
 # print to console as logging is not ready yet
 docker.boot.secret.print.errors=true
 docker.boot.secret.print.secrets=false
