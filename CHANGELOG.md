@@ -6,11 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2020-02-20
+## [1.1.0] - 2020-02-20
+
+### Added
+- Config property `docker.boot.secret.trim` to control trimming of secret value. Defaults to true.
+
+### Fixed
+- Tests added ;)
+
+## [1.0.0] - 2020-02-19
 
 ### Added
 - DockerSecretEnvPostProcessor for including Docker Secrets as property
 
 
-[Unreleased]: https://github.com/moberwasserlechner/docker-boot-utils/compare/1.0.0...master
+[Unreleased]: https://github.com/moberwasserlechner/docker-boot-utils/compare/1.1.0...master
+[1.1.0]: https://github.com/moberwasserlechner/docker-boot-utils/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/moberwasserlechner/docker-boot-utils/releases/tag/1.0.0

@@ -21,52 +21,38 @@ import java.util.stream.Collectors;
  */
 public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, Ordered {
 
-    private static final String PROP_PREFIX = "docker.boot.secret.";
+    private static final String PROP_ENABLED = "docker.boot.secret.enabled";
+    private static final boolean PROP_ENABLED_DEFAULT = true;
+
+    private static final String PROP_PREFIX = "docker.boot.secret.prefix";
+    private static final String PROD_PREFIX_DEFAULT = "docker_secret_";
+
+    private static final String PROP_PATH = "docker.boot.secret.path";
+    private static final String PROP_PATH_DEFAULT = "/run/secrets";
+
+    private static final String PROP_TRIM = "docker.boot.secret.trim";
+    private static final boolean PROP_TRIM_DEFAULT = true;
+
+    private static final String PROP_PRINT_ERRORS = "docker.boot.secret.print.errors";
+    private static final boolean PROP_PRINT_ERRORS_DEFAULT = true;
+
+    private static final String PROP_PRINT_SECRETS = "docker.boot.secret.print.secrets";
+    private static final boolean PROP_PRINT_SECRETS_DEFAULT = false;
+
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication application) {
-        final boolean enabled = env.getProperty(PROP_PREFIX + "enabled", Boolean.class, true);
+        final boolean enabled = env.getProperty(PROP_ENABLED, Boolean.class, PROP_ENABLED_DEFAULT);
         if (enabled) {
-            final String path = env.getProperty(PROP_PREFIX + "path", "/run/secrets");
-            final String prefix = env.getProperty(PROP_PREFIX + "prefix", "docker_secret_");
-            final boolean printErrors = env.getProperty(PROP_PREFIX + "print.errors", Boolean.class, true);
+            final String prefix = env.getProperty(PROP_PREFIX, PROD_PREFIX_DEFAULT);
+            final boolean printErrors = env.getProperty(PROP_PRINT_ERRORS, Boolean.class, PROP_PRINT_ERRORS_DEFAULT);
+            final String path = env.getProperty(PROP_PATH, PROP_PATH_DEFAULT);
+            final boolean trim = env.getProperty(PROP_TRIM, Boolean.class, PROP_TRIM_DEFAULT);
 
-            final Path secretsDirectory = Paths.get(path);
-            if (Files.isDirectory(secretsDirectory)) {
-                Map<String, Object> dockerSecretsMap = null;
-                try {
-                    dockerSecretsMap = Files
-                        .list(secretsDirectory)
-                        .filter(p -> Files.isRegularFile(p))
-                        .collect(
-                            Collectors.toMap(
-                                filePath -> prefix + filePath.toFile().getName(),
-                                filePath -> {
-                                    final File in = filePath.toFile();
-                                    try {
-                                        final byte[] content = FileCopyUtils.copyToByteArray(in);
-                                        String value = new String(content, StandardCharsets.UTF_8);
-                                        // remove \n\r
-                                        return value.trim();
-                                    } catch (IOException e) {
-                                        if (printErrors) {
-                                            printOut("Content of " + in.getPath() + "not copied!");
-                                        }
-                                    }
-                                    // set property to empty value
-                                    return "";
-                                }
-                            )
-                        );
-                } catch (IOException e) {
-                    if (printErrors) {
-                        final File dir = secretsDirectory.toFile();
-                        printOut("Not able to read file list from " + dir.getPath());
-                    }
-                }
-
+            try {
+                Map<String, Object> dockerSecretsMap = getDockerSecretsMap(path, prefix, trim, printErrors);
                 if (dockerSecretsMap != null && !dockerSecretsMap.isEmpty()) {
-                    final boolean printSecrets = env.getProperty(PROP_PREFIX + "print.secrets", Boolean.class, false);
+                    final boolean printSecrets = env.getProperty(PROP_PRINT_SECRETS, Boolean.class, PROP_PRINT_SECRETS_DEFAULT);
                     if (printSecrets) {
                         printOut("=======================");
                         printOut("    Docker Secrets     ");
@@ -78,20 +64,59 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
                     MapPropertySource mps = new MapPropertySource("DockerSecrets", dockerSecretsMap);
                     env.getPropertySources().addLast(mps);
                 }
-            } else {
+            } catch (IOException e) {
                 if (printErrors) {
-                    printOut("Path " + secretsDirectory.toFile().getPath() + " for Docker Secrets not found!");
+                    printOut("Invalid path '" + path + "'. Check if it's a valid directory!");
                 }
             }
+
         }
     }
 
+    protected Map<String, Object> getDockerSecretsMap(String path, String prefix, boolean trim, boolean printErrors) throws IOException {
+        final Path secretsDirectory = Paths.get(path);
+        return Files
+            .list(secretsDirectory)
+            .filter(p -> Files.isRegularFile(p))
+            .collect(
+                Collectors.toMap(
+                    filePath -> {
+                        String name = "";
+                        if (prefix != null) {
+                            name = prefix;
+                        }
+                        name += filePath.toFile().getName();
+                        return name;
+                    },
+                    filePath -> {
+                        final File in = filePath.toFile();
+                        try {
+                            final byte[] content = FileCopyUtils.copyToByteArray(in);
+                            String value = new String(content, StandardCharsets.UTF_8);
+                            if (trim) {
+                                // remove \n\r
+                                return value.trim();
+                            }
+                            return value;
+                        } catch (IOException e) {
+                            if (printErrors) {
+                                printOut("Content of " + in.getPath() + " not copied!");
+                            }
+                        }
+                        // set property to empty value
+                        return "";
+                    }
+                )
+            );
+    }
+
     private void printOut(String message) {
-        System.out.println(message);
+        System.out.println(getClass().getName() + ": " + message);
     }
 
     @Override
     public int getOrder() {
         return Ordered.LOWEST_PRECEDENCE;
     }
+
 }

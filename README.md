@@ -8,7 +8,7 @@ Docker secrets are mounted to the container on a file basis. This is a approach 
 
 The class `DockerSecretEnvPostProcessor` reads these secret files and creates properties usable like any other spring property.
 
-```
+```properties
 # `docker_secret_` is the prefix and `email_username` the name of the secret file
 app.email.username=${docker_secret_email_username}
 ```
@@ -24,21 +24,30 @@ org.springframework.boot.env.EnvironmentPostProcessor=com.byteowls.docker.boot.D
 
 After that you can configure the post processor from your `application-<env>.properties` or any other Spring supported mechanism.
 
-```
+```properties
 #key=default_value
+
+# enable/disable the post processor during runtime
 docker.boot.secret.enabled=true
+# docker secret mount path
 docker.boot.secret.path=/run/secrets
+# prefix for secret name 
 docker.boot.secret.prefix=docker_secret_
-# print to console as logging is not ready yet
+# remove leading and trailing whitespace chars
+docker.boot.secret.trim=true
+# print errors to System.out
 docker.boot.secret.print.errors=true
+# Attention: print all found secrets to System.out
 docker.boot.secret.print.secrets=false
 ```
+
+Note: We print to System.out because the log system is not ready, when the post processor is executed.
 
 ## Dependency
 
 ### Gradle
 
-```
+```gradle
 repositories {
   jcenter()
 }
@@ -49,7 +58,7 @@ dependencies {
 
 ### Maven
 
-```
+```xml
 <repositories>
   <!-- ... other repository elements ... -->
   <repository>

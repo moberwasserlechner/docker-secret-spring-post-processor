@@ -2,23 +2,25 @@ package com.byteowls.docker.boot;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.springframework.boot.SpringApplication;
 import org.springframework.core.Ordered;
-import org.springframework.core.env.ConfigurableEnvironment;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.io.IOException;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author m.oberwasserlechner@byteowls.com
  */
 class DockerSecretEnvPostProcessorTest {
 
+    private static final String TEST_SECRET_DIR = "src/test/resources/secrets/";
+
     private DockerSecretEnvPostProcessor pp;
-//    @Mock
-//    private ConfigurableEnvironment env;
-//    @Mock
-//    private SpringApplication app;
 
     @BeforeEach
     void setUp() {
@@ -26,12 +28,55 @@ class DockerSecretEnvPostProcessorTest {
     }
 
     @Test
-    void postProcessEnvironment() {
-//        pp.postProcessEnvironment(env, app);
+    void getOrder() {
+        assertEquals(Ordered.LOWEST_PRECEDENCE, pp.getOrder());
     }
 
     @Test
-    void getOrder() {
-        assertEquals(Ordered.LOWEST_PRECEDENCE, pp.getOrder());
+    void exceptionsThrowing() {
+        final String dockerSecretPrefix = "docker_secret_";
+        // no such file
+        assertThrows(IOException.class, () ->
+            pp.getDockerSecretsMap("/path/not/exists", dockerSecretPrefix, true, false));
+
+        // no directory
+        assertThrows(IOException.class, () ->
+            pp.getDockerSecretsMap("/secrets/password", dockerSecretPrefix, true, false));
+    }
+
+    @Test
+    void basicFileParsing() throws IOException {
+        final String prefix = "docker_secret_";
+        final Map<String, Object> dockerSecretsMap = pp.getDockerSecretsMap(TEST_SECRET_DIR, prefix, true,false);
+        assertNotNull(dockerSecretsMap);
+        assertEquals(2, dockerSecretsMap.size());
+        for (String key : dockerSecretsMap.keySet()) {
+            assertTrue(key.startsWith(prefix));
+        }
+    }
+
+    @Test
+    void whitespaceHandling() throws IOException {
+        final Map<String, Object> mapTrim = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true, false);
+        assertEquals("michael", mapTrim.get("username"));
+
+        final Map<String, Object> mapNotTrim = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, false, false);
+        final String username = (String) mapNotTrim.get("username");
+        assertTrue(username.endsWith("\r\n") || username.endsWith("\n"));
+        assertNotEquals("michael", username);
+    }
+
+    @Test
+    void noPrefixHandling() throws IOException {
+        assertNoPrefixUsernameOrPassword(pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true,false));
+
+        assertNoPrefixUsernameOrPassword(pp.getDockerSecretsMap(TEST_SECRET_DIR, "", true,false));
+
+    }
+
+    private void assertNoPrefixUsernameOrPassword(Map<String, Object> map) {
+        for (String key : map.keySet()) {
+            assertTrue("password".equals(key) || "username".equals(key));
+        }
     }
 }
