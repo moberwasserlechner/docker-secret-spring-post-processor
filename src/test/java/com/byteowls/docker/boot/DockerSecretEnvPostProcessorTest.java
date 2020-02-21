@@ -49,10 +49,26 @@ class DockerSecretEnvPostProcessorTest {
         final String prefix = "docker_secret_";
         final Map<String, Object> dockerSecretsMap = pp.getDockerSecretsMap(TEST_SECRET_DIR, prefix, true,false);
         assertNotNull(dockerSecretsMap);
-        assertEquals(2, dockerSecretsMap.size());
+        assertEquals(3, dockerSecretsMap.size());
         for (String key : dockerSecretsMap.keySet()) {
             assertTrue(key.startsWith(prefix));
         }
+    }
+
+    @Test
+    void maskingSecrets() throws IOException {
+        final Map<String, Object> map = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true, false);
+        final String key = "username";
+        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key));
+        assertEquals(key + "=m********", maskedKeyPair);
+    }
+
+    @Test
+    void maskingEmptySecrets() throws IOException {
+        final Map<String, Object> map = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true, false);
+        final String key = "empty";
+        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key));
+        assertEquals(key + "=_********", maskedKeyPair);
     }
 
     @Test
@@ -76,7 +92,7 @@ class DockerSecretEnvPostProcessorTest {
 
     private void assertNoPrefixUsernameOrPassword(Map<String, Object> map) {
         for (String key : map.keySet()) {
-            assertTrue("password".equals(key) || "username".equals(key));
+            assertTrue("password".equals(key) || "username".equals(key) || "empty".equals(key));
         }
     }
 }

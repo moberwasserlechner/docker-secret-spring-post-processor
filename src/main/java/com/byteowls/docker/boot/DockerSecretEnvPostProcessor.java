@@ -38,6 +38,7 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
 
     private static final String PROP_PRINT_SECRETS = "docker.boot.secret.print.secrets";
     private static final boolean PROP_PRINT_SECRETS_DEFAULT = false;
+    private static final String SECRET_MASK = "********";
 
 
     @Override
@@ -54,14 +55,14 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
                 if (dockerSecretsMap != null && !dockerSecretsMap.isEmpty()) {
                     final boolean printSecrets = env.getProperty(PROP_PRINT_SECRETS, Boolean.class, PROP_PRINT_SECRETS_DEFAULT);
                     if (printSecrets) {
-                        printOut("=======================");
-                        printOut("    Docker Secrets     ");
-                        printOut("=======================");
-                        dockerSecretsMap.forEach((k, v) -> printOut(k + "=" + v));
-                        printOut("=======================");
+                        printOut("===========================");
+                        printOut("     Docker Properties     ");
+                        printOut("===========================");
+                        dockerSecretsMap.forEach((k, v) -> printOut(getMaskedSecretKeyPair(k, v)));
+                        printOut("===========================");
                     }
 
-                    MapPropertySource mps = new MapPropertySource("DockerSecrets", dockerSecretsMap);
+                    MapPropertySource mps = new MapPropertySource("Docker", dockerSecretsMap);
                     env.getPropertySources().addLast(mps);
                 }
             } catch (IOException e) {
@@ -71,6 +72,18 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
             }
 
         }
+    }
+
+    protected String getMaskedSecretKeyPair(String key, Object value) {
+        String strValue = (String) value;
+        String maskedValue = key + "=";
+        if (strValue.length() > 0) {
+            maskedValue += strValue.charAt(0);
+        } else {
+            maskedValue += "_";
+        }
+        maskedValue += SECRET_MASK;
+        return maskedValue;
     }
 
     protected Map<String, Object> getDockerSecretsMap(String path, String prefix, boolean trim, boolean printErrors) throws IOException {
