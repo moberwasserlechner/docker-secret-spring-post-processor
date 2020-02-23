@@ -13,6 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -58,7 +61,10 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
                         printOut("===========================");
                         printOut("     Docker Properties     ");
                         printOut("===========================");
-                        dockerSecretsMap.forEach((k, v) -> printOut(getMaskedSecretKeyPair(k, v)));
+                        List<String> keyPairs = new ArrayList<>();
+                        dockerSecretsMap.forEach((k, v) -> keyPairs.add(getMaskedSecretKeyPair(k, v)));
+                        Collections.sort(keyPairs);
+                        keyPairs.forEach(this::printOut);
                         printOut("===========================");
                     }
 

@@ -37,7 +37,7 @@ docker.boot.secret.prefix=docker_secret_
 docker.boot.secret.trim=true
 # print errors to System.out
 docker.boot.secret.print.errors=true
-# Attention: print all found secrets to System.out
+# Attention: print all found secrets (masked) to System.out
 docker.boot.secret.print.secrets=false
 ```
 
