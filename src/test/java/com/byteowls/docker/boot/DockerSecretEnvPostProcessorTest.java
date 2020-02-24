@@ -59,16 +59,23 @@ class DockerSecretEnvPostProcessorTest {
     void maskingSecrets() throws IOException {
         final Map<String, Object> map = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true, false);
         final String key = "username";
-        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key));
-        assertEquals(key + "=m********", maskedKeyPair);
+        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key), false);
+        assertEquals(key + "=********", maskedKeyPair);
+
+        final String unmaskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key), true);
+        assertEquals(key + "=michael", unmaskedKeyPair);
     }
 
     @Test
     void maskingEmptySecrets() throws IOException {
         final Map<String, Object> map = pp.getDockerSecretsMap(TEST_SECRET_DIR, null, true, false);
         final String key = "empty";
-        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key));
-        assertEquals(key + "=_********", maskedKeyPair);
+        final String maskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key), false);
+        assertEquals(key + "=********", maskedKeyPair);
+
+
+        final String unmaskedKeyPair = pp.getMaskedSecretKeyPair(key, map.get(key), true);
+        assertEquals(key + "=", unmaskedKeyPair);
     }
 
     @Test

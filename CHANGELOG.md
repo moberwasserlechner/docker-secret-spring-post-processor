@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.2] - 2020-02-22
+### Added
+- Config property `docker.boot.secret.print.secrets.unmasked` to print secrets unmasked. Defaults to false. If users decide to print the unmasked secrets to System.out it is their decision and responsibility, not the libraries one.
 
 ### Improved
 - Print secrets alphabetically

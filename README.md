@@ -37,11 +37,13 @@ docker.boot.secret.prefix=docker_secret_
 docker.boot.secret.trim=true
 # print errors to System.out
 docker.boot.secret.print.errors=true
-# Attention: print all found secrets (masked) to System.out
+# Attention: print all found secrets (masked) to System.out. Use with care.
 docker.boot.secret.print.secrets=false
+# Attention: unmasks all printed secrets. Use with care.
+docker.boot.secret.print.secrets.unmasked=false
 ```
 
-Note: We print to System.out because the log system is not ready, when the post processor is executed.
+Note: We print to System.out because the log system is **not ready**, when the post processor is executed.
 
 ## Dependency
 

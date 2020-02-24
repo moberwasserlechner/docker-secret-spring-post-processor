@@ -43,6 +43,8 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
     private static final boolean PROP_PRINT_SECRETS_DEFAULT = false;
     private static final String SECRET_MASK = "********";
 
+    private static final String PROP_PRINT_SECRETS_UNMASKED = "docker.boot.secret.print.secrets.unmasked";
+    private static final boolean PROP_PRINT_SECRETS_UNMASKED_DEFAULT = false;
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication application) {
@@ -58,11 +60,12 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
                 if (dockerSecretsMap != null && !dockerSecretsMap.isEmpty()) {
                     final boolean printSecrets = env.getProperty(PROP_PRINT_SECRETS, Boolean.class, PROP_PRINT_SECRETS_DEFAULT);
                     if (printSecrets) {
+                        final boolean printUnmasked = env.getProperty(PROP_PRINT_SECRETS_UNMASKED, Boolean.class, PROP_PRINT_SECRETS_UNMASKED_DEFAULT);
                         printOut("===========================");
                         printOut("     Docker Properties     ");
                         printOut("===========================");
                         List<String> keyPairs = new ArrayList<>();
-                        dockerSecretsMap.forEach((k, v) -> keyPairs.add(getMaskedSecretKeyPair(k, v)));
+                        dockerSecretsMap.forEach((k, v) -> keyPairs.add(getMaskedSecretKeyPair(k, v, printUnmasked)));
                         Collections.sort(keyPairs);
                         keyPairs.forEach(this::printOut);
                         printOut("===========================");
@@ -80,15 +83,14 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
         }
     }
 
-    protected String getMaskedSecretKeyPair(String key, Object value) {
+    protected String getMaskedSecretKeyPair(String key, Object value, boolean printUnmasked) {
         String strValue = (String) value;
         String maskedValue = key + "=";
-        if (strValue.length() > 0) {
-            maskedValue += strValue.charAt(0);
+        if (!printUnmasked) {
+            maskedValue += SECRET_MASK;
         } else {
-            maskedValue += "_";
+            maskedValue += strValue;
         }
-        maskedValue += SECRET_MASK;
         return maskedValue;
     }
 
