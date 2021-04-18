@@ -1,6 +1,8 @@
 # Spring Boot PostProcessor for Docker Secrets
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.byteowls/docker-secret-spring-post-processor.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.byteowls%22%20AND%20a:%22docker-secret-spring-post-processor%22)
 ![Tests](https://github.com/moberwasserlechner/docker-secret-spring-post-processor/workflows/Tests/badge.svg)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/moberwasserlechner)
 
 Docker secrets are mounted to the container on a file basis. This is an approach not support by Spring out of the box.
 
