@@ -98,7 +98,7 @@ public class DockerSecretEnvPostProcessor implements EnvironmentPostProcessor, O
         final Path secretsDirectory = Paths.get(path);
         return Files
             .list(secretsDirectory)
-            .filter(p -> Files.isRegularFile(p))
+            .filter(Files::isRegularFile)
             .collect(
                 Collectors.toMap(
                     filePath -> {

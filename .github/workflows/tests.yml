@@ -43,4 +43,4 @@ jobs:
                       ${{ runner.os }}-gradle-
 
             - name: Run Tests
-              run: ./gradlew test --no-daemon
+              run: ./gradlew test

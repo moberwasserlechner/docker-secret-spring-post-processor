@@ -1,26 +1,23 @@
 plugins {
-	id 'java'
+	id 'java-library'
 	id 'maven-publish'
-	id "com.jfrog.bintray" version "1.8.4"
+	id 'signing'
 }
-
-group 'com.byteowls'
-
-sourceCompatibility = 1.8
 
 repositories {
 	mavenCentral()
 }
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
 dependencies {
+	implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 	implementation "org.springframework.boot:spring-boot:2.2.4.RELEASE"
 
-	testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-	testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
-	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-	testRuntimeOnly "ch.qos.logback:logback-classic:1.2.3"
-
-	testImplementation "org.mockito:mockito-core:3.2.0"
+	testImplementation("org.slf4j:slf4j-simple:${slf4jVersion}")
+	testImplementation(platform("org.junit:junit-bom:5.7.1"))
+	testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 java {
@@ -28,52 +25,55 @@ java {
 	withSourcesJar()
 }
 
-// ###################################
-// ### Publish to local maven repo ###
-// ###################################
-
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			from components.java
+			pom {
+				name = 'Docker Secret Spring Post Processor'
+				description = 'Spring (Boot) environment post processor for Docker Secrets'
+				url = 'https://github.com/moberwasserlechner/docker-secret-spring-post-processor'
+				licenses {
+					license {
+						name = 'MIT'
+						url = 'https://opensource.org/licenses/MIT'
+					}
+				}
+				developers {
+					developer {
+						id = 'moberwasserlechner'
+						name = 'Michael Oberwasserlechner'
+						email = 'm.oberwasserlechner@byteowls.com'
+					}
+				}
+				scm {
+					connection = 'scm:git:https://github.com/moberwasserlechner/docker-secret-spring-post-processor'
+					developerConnection = 'scm:git:https://github.com/moberwasserlechner/docker-secret-spring-post-processor'
+					url = 'https://github.com/moberwasserlechner/docker-secret-spring-post-processor'
+				}
+			}
+		}
+	}
+	repositories {
+		maven {
+			// change URLs to point to your repos, e.g. http://my.org/repo
+			def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+			def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+			url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+			credentials {
+				username = project.findProperty("MAVEN_CENTRAL_USERNAME") ?: System.getenv("MAVEN_CENTRAL_USERNAME")
+				password = project.findProperty("MAVEN_CENTRAL_PASSWORD") ?: System.getenv("MAVEN_CENTRAL_PASSWORD")
+			}
 		}
 	}
 }
 
-// ##########################
-// ### Publish to bintray ###
-// ##########################
-
-bintray {
-	user = project.hasProperty('BINTRAY_USER') ? BINTRAY_USER : null //this usually comes from gradle.properties file in ~/.gradle
-	key = project.hasProperty('BINTRAY_API_KEY') ? BINTRAY_API_KEY : null //this usually comes from gradle.properties file in ~/.gradle
-
-	// configurations = ['archives'] //When uploading configuration files
-	// - OR -
-	publications = ['mavenJava'] //When uploading Maven-based publication files
-
-	dryRun = false //Whether to run this as dry-run, without deploying
-	publish = false //If version should be auto published after an upload
-
-	// Package configuration. The plugin will use the repo and name properties to check if the package already exists.
-	// In that case, there's no need to configure the other package properties (like userOrg, desc, etc).
-	pkg {
-		repo = 'maven'
-		name = 'docker-boot-utils'
-		desc = 'Spring Boot utils for Docker easier integration'
-		websiteUrl = 'https://github.com/moberwasserlechner/docker-boot-utils'
-		issueTrackerUrl = 'https://github.com/moberwasserlechner/docker-boot-utils/issues'
-		vcsUrl = 'https://github.com/moberwasserlechner/docker-boot-utils.git'
-		licenses = ['MIT']
-		labels = ['docker', 'docker-secrets', 'spring-boot']
-		publicDownloadNumbers = true
-
-		version {
-			name = project.version //Bintray logical version name
-			// desc = 'optional'
-			vcsTag = project.version
-		}
-	}
+signing {
+	def signingKeyId = (String) project.findProperty("MAVEN_SIGNING_KEY_ID") ?: System.getenv("MAVEN_SIGNING_KEY_ID")
+	def signingKey = (String) project.findProperty("MAVEN_SIGNING_KEY") ?: System.getenv("MAVEN_SIGNING_KEY")
+	def signingPassword = (String) project.findProperty("MAVEN_SIGNING_PASSWORD") ?: System.getenv("MAVEN_SIGNING_PASSWORD")
+	useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+	sign publishing.publications.mavenJava
 }
 
 
@@ -84,7 +84,6 @@ javadoc {
 }
 
 test {
-	useJUnitPlatform {
-		excludeTags 'integration'
-	}
+	useJUnitPlatform()
+	systemProperties = System.properties
 }
